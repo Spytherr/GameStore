@@ -5,5 +5,7 @@ public record GameSummaryDto(
     string Title,
     string Genre,
     decimal Price,
+    decimal? DiscountedPrice,
+    bool IsOnSale,
     DateOnly ReleaseDate
 );

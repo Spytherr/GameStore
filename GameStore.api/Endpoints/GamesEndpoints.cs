@@ -1,6 +1,3 @@
-using System;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameStore.api;
 
 public static class GamesEndpoints
@@ -9,71 +6,51 @@ public static class GamesEndpoints
     public static void MapGamesEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/games");
+
         // GET /games
-        group.MapGet("/", async (GameStoreContext context) => await context.Games.Include(game => game.Genre).Select(game => new GameSummaryDto(
-            game.Id,
-            game.Title,
-            game.Genre!.Name,
-            game.Price,
-            game.ReleaseDate
-        )).AsNoTracking().ToListAsync());
+        group.MapGet("/", async (IGamesService service) =>
+            await service.GetAllAsync());
 
         // GET /games/{id}
-        group.MapGet("/{id}", async (int id, GameStoreContext context) =>
+        group.MapGet("/{id}", async (int id, IGamesService service) =>
         {
-            var game = await context.Games.Include(game => game.Genre).FirstOrDefaultAsync(g => g.Id == id);
-            return game is null ? Results.NotFound() : Results.Ok(new GameDetailsDto(
-                game.Id,
-                game.Title,
-                game.Genre!.Id,
-                game.Price,
-                game.ReleaseDate
-            ));
+            var result = await service.GetByIdAsync(id);
+            return result.ToHttpResult();
         }).WithName(GetGameEndpointName);
 
         // POST /games
-        group.MapPost("/",async (CreateGameDto newgame, GameStoreContext context) =>
+        group.MapPost("/", async (CreateGameDto newGame, IGamesService service) =>
         {
-            Game game = new()
-            {
-                Title = newgame.Title,
-                GenreId = newgame.GenreId,
-                Price = newgame.Price,
-                ReleaseDate = newgame.ReleaseDate
-            };
-            context.Games.Add(game);
-            await context.SaveChangesAsync();
-            GameDetailsDto gameDetails = new(
-                game.Id,
-                game.Title,
-                game.GenreId,
-                game.Price,
-                game.ReleaseDate
-            );
-            return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, gameDetails);
+            var result = await service.CreateAsync(newGame);
+            return result.ToCreatedHttpResult(GetGameEndpointName, game => new { id = game.Id });
         });
 
         // PUT /games/{id}
-        group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, GameStoreContext context) =>
+        group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, IGamesService service) =>
         {
-            var game = await context.Games.FindAsync(id);
-            if (game is null)
-            {
-                return Results.NotFound();
-            }
-            game.Title = updatedGame.Title;
-            game.GenreId = updatedGame.GenreId;
-            game.Price = updatedGame.Price;
-            game.ReleaseDate = updatedGame.ReleaseDate;
-            await context.SaveChangesAsync();
-            return Results.NoContent();
+            var result = await service.UpdateAsync(id, updatedGame);
+            return result.ToHttpResult();
         });
 
         // DELETE /games/{id}
-        group.MapDelete("/{id}", async (int id, GameStoreContext context) =>
+        group.MapDelete("/{id}", async (int id, IGamesService service) =>
         {
-            await context.Games.Where(g => g.Id == id).ExecuteDeleteAsync();
-            return Results.NoContent();
+            var result = await service.DeleteAsync(id);
+            return result.ToHttpResult();
+        });
+
+        // POST /games/{id}/discount
+        group.MapPost("/{id}/discount", async (int id, ApplyDiscountDto dto, IGamesService service) =>
+        {
+            var result = await service.ApplyDiscountAsync(id, dto.DiscountPercentage);
+            return result.ToHttpResult();
+        });
+
+        // DELETE /games/{id}/discount
+        group.MapDelete("/{id}/discount", async (int id, IGamesService service) =>
+        {
+            var result = await service.RemoveDiscountAsync(id);
+            return result.ToHttpResult();
         });
     }
 }
