@@ -1,0 +1,39 @@
+GET http://localhost:5012/games
+
+###
+
+GET http://localhost:5012/games/5
+###
+POST http://localhost:5012/games
+Content-Type: application/json
+
+{
+  "title": "Action Game",
+  "genreId": 1,
+  "price": 59.99,
+  "releaseDate": "2024-01-01"
+}
+###
+POST http://localhost:5012/games
+Content-Type: application/json
+
+{
+  "title": "Another Game",
+  "genreId": 2,
+  "price": 54.99,
+  "releaseDate": "2067-01-01"
+}
+
+###
+
+PUT http://localhost:5012/games/2
+Content-Type: application/json
+
+{
+  "title": "Updated Game",
+  "genreId": 2,
+  "price": 49.99,
+  "releaseDate": "2024-02-01"
+}
+###
+DELETE http://localhost:5012/games/1
