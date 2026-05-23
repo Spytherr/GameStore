@@ -18,39 +18,25 @@ public static class GamesEndpoints
             return result.ToHttpResult();
         }).WithName(GetGameEndpointName);
 
-        // POST /games
+        // POST /games — Seller only
         group.MapPost("/", async (CreateGameDto newGame, IGamesService service) =>
         {
             var result = await service.CreateAsync(newGame);
             return result.ToCreatedHttpResult(GetGameEndpointName, game => new { id = game.Id });
-        });
+        }).RequireAuthorization("SellerOnly");
 
-        // PUT /games/{id}
+        // PUT /games/{id} — Seller only
         group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, IGamesService service) =>
         {
             var result = await service.UpdateAsync(id, updatedGame);
             return result.ToHttpResult();
-        });
+        }).RequireAuthorization("SellerOnly");
 
-        // DELETE /games/{id}
+        // DELETE /games/{id} — Seller only
         group.MapDelete("/{id}", async (int id, IGamesService service) =>
         {
             var result = await service.DeleteAsync(id);
             return result.ToHttpResult();
-        });
-
-        // POST /games/{id}/discount
-        group.MapPost("/{id}/discount", async (int id, ApplyDiscountDto dto, IGamesService service) =>
-        {
-            var result = await service.ApplyDiscountAsync(id, dto.DiscountPercentage);
-            return result.ToHttpResult();
-        });
-
-        // DELETE /games/{id}/discount
-        group.MapDelete("/{id}/discount", async (int id, IGamesService service) =>
-        {
-            var result = await service.RemoveDiscountAsync(id);
-            return result.ToHttpResult();
-        });
+        }).RequireAuthorization("SellerOnly");
     }
 }

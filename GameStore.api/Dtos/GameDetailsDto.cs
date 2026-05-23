@@ -5,11 +5,8 @@ public record GameDetailsDto(
     string Title,
     string? Description,
     int GenreId,
-    decimal Price,
-    decimal DiscountPercentage,
-    decimal? DiscountedPrice,
-    bool IsOnSale,
-    int Stock,
+    string GenreName,
     string? ImageUrl,
-    DateOnly ReleaseDate
+    DateOnly ReleaseDate,
+    List<GameOfferDto> Offers
 );

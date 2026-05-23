@@ -4,8 +4,9 @@ public record GameSummaryDto(
     int Id,
     string Title,
     string Genre,
-    decimal Price,
-    decimal? DiscountedPrice,
-    bool IsOnSale,
+    string? ImageUrl,
+    decimal? LowestPrice,
+    bool HasOffersOnSale,
+    int TotalOffers,
     DateOnly ReleaseDate
 );
