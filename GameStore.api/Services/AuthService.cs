@@ -16,12 +16,12 @@ public class AuthService(
     {
         if (!ValidRoles.Contains(dto.Role))
             return ServiceResult<AuthResponseDto>.ValidationError(
-                "Nieprawidłowa rola. Dozwolone wartości: Buyer, Seller.");
+                "Invalid role. Allowed values: Buyer, Seller.");
 
         var existingUser = await userManager.FindByEmailAsync(dto.Email);
         if (existingUser is not null)
             return ServiceResult<AuthResponseDto>.Conflict(
-                "Użytkownik z tym adresem email już istnieje.");
+                "User with this email address already exists.");
 
         var user = new ApplicationUser
         {
@@ -52,12 +52,12 @@ public class AuthService(
         var user = await userManager.FindByEmailAsync(dto.Email);
         if (user is null)
             return ServiceResult<AuthResponseDto>.ValidationError(
-                "Nieprawidłowy email lub hasło.");
+                "Invalid email or password.");
 
         var validPassword = await userManager.CheckPasswordAsync(user, dto.Password);
         if (!validPassword)
             return ServiceResult<AuthResponseDto>.ValidationError(
-                "Nieprawidłowy email lub hasło.");
+                "Invalid email or password.");
 
         var roles = await userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? "Buyer";

@@ -9,7 +9,7 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var gameExists = await context.Games.AnyAsync(g => g.Id == gameId);
         if (!gameExists)
             return ServiceResult<List<GameOfferDto>>.NotFound(
-                $"Gra o ID {gameId} nie została znaleziona.");
+                $"Game with ID {gameId} was not found.");
 
         var offers = await context.GameOffers
             .Where(o => o.GameId == gameId)
@@ -27,13 +27,13 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var gameExists = await context.Games.AnyAsync(g => g.Id == gameId);
         if (!gameExists)
             return ServiceResult<GameOfferDto>.NotFound(
-                $"Gra o ID {gameId} nie została znaleziona.");
+                $"Game with ID {gameId} was not found.");
 
         var existingOffer = await context.GameOffers
             .AnyAsync(o => o.GameId == gameId && o.SellerId == sellerId);
         if (existingOffer)
             return ServiceResult<GameOfferDto>.Conflict(
-                "Masz już ofertę na tę grę.");
+                "You already have an offer for this game.");
 
         var offer = new GameOffer
         {
@@ -56,11 +56,11 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
-                $"Oferta o ID {offerId} nie została znaleziona.");
+                $"Offer with ID {offerId} was not found.");
 
         if (offer.SellerId != sellerId)
             return ServiceResult.ValidationError(
-                "Nie masz uprawnień do edycji tej oferty.");
+                "You do not have permission to edit this offer.");
 
         offer.Price = dto.Price;
         offer.Stock = dto.Stock;
@@ -74,11 +74,11 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
-                $"Oferta o ID {offerId} nie została znaleziona.");
+                $"Offer with ID {offerId} was not found.");
 
         if (offer.SellerId != sellerId)
             return ServiceResult.ValidationError(
-                "Nie masz uprawnień do usunięcia tej oferty.");
+                "You do not have permission to delete this offer.");
 
         context.GameOffers.Remove(offer);
         await context.SaveChangesAsync();
@@ -91,15 +91,15 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
-                $"Oferta o ID {offerId} nie została znaleziona.");
+                $"Offer with ID {offerId} was not found.");
 
         if (offer.SellerId != sellerId)
             return ServiceResult.ValidationError(
-                "Nie masz uprawnień do edycji tej oferty.");
+                "You do not have permission to edit this offer.");
 
         if (discountPercentage < 1 || discountPercentage > 90)
             return ServiceResult.ValidationError(
-                "Przecena musi być w zakresie od 1% do 90%.");
+                "Discount must be between 1% and 90%.");
 
         offer.DiscountPercentage = discountPercentage;
         offer.IsOnSale = true;
@@ -113,11 +113,11 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
-                $"Oferta o ID {offerId} nie została znaleziona.");
+                $"Offer with ID {offerId} was not found.");
 
         if (offer.SellerId != sellerId)
             return ServiceResult.ValidationError(
-                "Nie masz uprawnień do edycji tej oferty.");
+                "You do not have permission to edit this offer.");
 
         offer.DiscountPercentage = 0;
         offer.IsOnSale = false;
@@ -135,7 +135,7 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         return new GameOfferDto(
             offer.Id,
             offer.GameId,
-            offer.Seller?.DisplayName ?? "Nieznany",
+            offer.Seller?.DisplayName ?? "Unknown",
             offer.Price,
             discountedPrice,
             offer.IsOnSale,

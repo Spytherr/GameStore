@@ -17,7 +17,7 @@ public class GenresService(GameStoreContext context) : IGenresService
         var genre = await context.Genres.FindAsync(id);
 
         if (genre is null)
-            return ServiceResult<GenreDto>.NotFound($"Gatunek o ID {id} nie został znaleziony.");
+            return ServiceResult<GenreDto>.NotFound($"Genre with ID {id} was not found.");
 
         return ServiceResult<GenreDto>.Success(new GenreDto(genre.Id, genre.Name));
     }

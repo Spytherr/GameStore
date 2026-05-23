@@ -21,6 +21,9 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
 
             entity.Property(g => g.ImageUrl)
                 .HasMaxLength(500);
+
+            entity.HasIndex(g => g.Title)
+                .IsUnique();
         });
 
         modelBuilder.Entity<GameOffer>(entity =>

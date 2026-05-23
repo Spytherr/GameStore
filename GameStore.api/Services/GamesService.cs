@@ -37,7 +37,7 @@ public class GamesService(GameStoreContext context) : IGamesService
 
         if (game is null)
             return ServiceResult<GameDetailsDto>.NotFound(
-                $"Gra o ID {id} nie została znaleziona.");
+                $"Game with ID {id} was not found.");
 
         var offerDtos = game.Offers.Select(o =>
         {
@@ -48,7 +48,7 @@ public class GamesService(GameStoreContext context) : IGamesService
             return new GameOfferDto(
                 o.Id,
                 o.GameId,
-                o.Seller?.DisplayName ?? "Nieznany",
+                o.Seller?.DisplayName ?? "Unknown",
                 o.Price,
                 discountedPrice,
                 o.IsOnSale,
@@ -70,10 +70,15 @@ public class GamesService(GameStoreContext context) : IGamesService
 
     public async Task<ServiceResult<GameDetailsDto>> CreateAsync(CreateGameDto dto)
     {
+        var titleExists = await context.Games.AnyAsync(g => g.Title == dto.Title);
+        if (titleExists)
+            return ServiceResult<GameDetailsDto>.Conflict(
+                $"A game with the title \"{dto.Title}\" already exists in the catalog.");
+
         var genreExists = await context.Genres.AnyAsync(g => g.Id == dto.GenreId);
         if (!genreExists)
             return ServiceResult<GameDetailsDto>.ValidationError(
-                $"Gatunek o ID {dto.GenreId} nie istnieje.");
+                $"Genre with ID {dto.GenreId} does not exist.");
 
         Game game = new()
         {
@@ -105,11 +110,11 @@ public class GamesService(GameStoreContext context) : IGamesService
     {
         var game = await context.Games.FindAsync(id);
         if (game is null)
-            return ServiceResult.NotFound($"Gra o ID {id} nie została znaleziona.");
+            return ServiceResult.NotFound($"Game with ID {id} was not found.");
 
         var genreExists = await context.Genres.AnyAsync(g => g.Id == dto.GenreId);
         if (!genreExists)
-            return ServiceResult.ValidationError($"Gatunek o ID {dto.GenreId} nie istnieje.");
+            return ServiceResult.ValidationError($"Genre with ID {dto.GenreId} does not exist.");
 
         game.Title = dto.Title;
         game.Description = dto.Description;
@@ -128,11 +133,11 @@ public class GamesService(GameStoreContext context) : IGamesService
             .FirstOrDefaultAsync(g => g.Id == id);
 
         if (game is null)
-            return ServiceResult.NotFound($"Gra o ID {id} nie została znaleziona.");
+            return ServiceResult.NotFound($"Game with ID {id} was not found.");
 
         if (game.Offers.Count > 0)
             return ServiceResult.Conflict(
-                $"Nie można usunąć gry, która ma {game.Offers.Count} aktywnych ofert.");
+                $"Cannot delete a game that has {game.Offers.Count} active offers.");
 
         context.Games.Remove(game);
         await context.SaveChangesAsync();
