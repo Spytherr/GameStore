@@ -9,6 +9,8 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
     public DbSet<Game> Games => Set<Game>();
     public DbSet<Genre> Genres => Set<Genre>();
     public DbSet<GameOffer> GameOffers => Set<GameOffer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +49,31 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
             entity.HasOne(o => o.Seller)
                 .WithMany(u => u.GameOffers)
                 .HasForeignKey(o => o.SellerId);
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
+
+            entity.Property(o => o.Status)
+                .HasConversion<string>();
+
+            entity.HasOne(o => o.Buyer)
+                .WithMany(u => u.Orders)
+                .HasForeignKey(o => o.BuyerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.Property(oi => oi.UnitPrice)
+                .HasPrecision(18, 2);
+
+            entity.HasOne(oi => oi.GameOffer)
+                .WithMany()
+                .HasForeignKey(oi => oi.GameOfferId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

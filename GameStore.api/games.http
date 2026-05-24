@@ -1,20 +1,9 @@
 @host = http://localhost:5012
 
-# ==========================================
-# INSTRUKCJA: Wykonuj requesty PO KOLEI!
-# 1) Zarejestruj sellera i buyera (1a, 1b)
-# 2) Zaloguj sellera (1c) — skopiuj "token" z odpowiedzi
-# 3) Wklej token poniżej między cudzysłowy:
-# ==========================================
+@sellerToken = YOUR_SELLER_TOKEN_HERE
+@buyerToken = YOUR_BUYER_TOKEN_HERE
 
-@sellerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQ0YTIyM2Y4LWQ2ZDMtNDEzNS05YWYzLWIxZjc0MmZkNzdmMSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InNlbGxlckB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJKYW51c3ogQml6bmVzdSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlNlbGxlciIsImV4cCI6MTc4MDE2NzEyNywiaXNzIjoiR2FtZVN0b3JlLmFwaSIsImF1ZCI6IkdhbWVTdG9yZS5jbGllbnQifQ.iG_SjYSA7l3vy_mTaiP9l8QeQGMIO5mzJ4WS0DvJSZo
-@buyerToken = e6cc524e-ab83-44ea-a08d-121e25657054
-
-# ==========================================
-# 1. AUTHENTICATION & ROLES
-# ==========================================
-
-### 1a. Rejestracja Sprzedawcy (Seller)
+### Register Seller
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -25,7 +14,7 @@ Content-Type: application/json
   "role": "Seller"
 }
 
-### 1b. Rejestracja Kupującego (Buyer)
+### Register Buyer
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -36,7 +25,7 @@ Content-Type: application/json
   "role": "Buyer"
 }
 
-### 1c. Logowanie Sprzedawcy — skopiuj "token" z odpowiedzi i wklej na górze pliku
+### Login Seller
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -45,7 +34,7 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
-### 1d. Logowanie Kupującego — skopiuj "token" z odpowiedzi i wklej na górze pliku
+### Login Buyer
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -54,17 +43,13 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
-# ==========================================
-# 2. KATALOG GIER (GAMES)
-# ==========================================
-
-### 2a. Przeglądanie katalogu (Publiczny)
+### Get all games (Public)
 GET {{host}}/games
 
-### 2b. Szczegóły gry (Publiczny) — uwzględnia oferty
+### Get game details (Public)
 GET {{host}}/games/1
 
-### 2c. Dodawanie gry do katalogu (Wymaga: SellerToken)
+### Add game to catalog (Requires: SellerToken)
 POST {{host}}/games
 Authorization: Bearer {{sellerToken}}
 Content-Type: application/json
@@ -77,82 +62,51 @@ Content-Type: application/json
   "releaseDate": "2015-05-19"
 }
 
-###
-POST {{host}}/games
-Authorization: Bearer {{sellerToken}}
-Content-Type: application/json
-
-{
-  "title": "Minecraft",
-  "description": "Gra o budowaniu i przetrwaniu",
-  "genreId": 2,
-  "imageUrl": "https://example.com/minecraft.jpg",
-  "releaseDate": "2011-11-18"
-}
-
-### 2d. Próba dodania gry przez Kupującego (Oczekiwane: 403 Forbidden)
-POST {{host}}/games
-Authorization: Bearer {{buyerToken}}
-Content-Type: application/json
-
-{
-  "title": "Cyberpunk 2077",
-  "description": "Gra science fiction",
-  "genreId": 3,
-  "releaseDate": "2020-12-10"
-}
-
-# ==========================================
-# 3. OFERTY GIER (GAME OFFERS) — MARKETPLACE
-# ==========================================
-
-### 3a. Dodanie oferty do gry przez Sprzedawcę (Wymaga: SellerToken)
+### Add offer (Requires: SellerToken)
 POST {{host}}/games/1/offers
 Authorization: Bearer {{sellerToken}}
 Content-Type: application/json
 
 {
   "price": 149.99,
-  "stock": 50
+  "stock": 10
 }
 
-### 3b. Przeglądanie ofert danej gry (Publiczny)
+### Get offers for a game (Public)
 GET {{host}}/games/1/offers
 
-### 3c. Aktualizacja ceny i stocku własnej oferty (Wymaga: SellerToken)
+### Update offer (Requires: SellerToken)
 PUT {{host}}/games/1/offers/1
 Authorization: Bearer {{sellerToken}}
 Content-Type: application/json
 
 {
   "price": 129.99,
-  "stock": 45
+  "stock": 15
 }
 
-### 3d. Dodanie zniżki do swojej oferty (Wymaga: SellerToken)
-POST {{host}}/games/1/offers/1/discount
-Authorization: Bearer {{sellerToken}}
+### Place order (Requires: BuyerToken)
+POST {{host}}/orders
+Authorization: Bearer {{buyerToken}}
 Content-Type: application/json
 
 {
-  "discountPercentage": 20.0
+  "items": [
+    { "gameOfferId": 1, "quantity": 3 }
+  ]
 }
 
-### 3e. Usunięcie zniżki (Wymaga: SellerToken)
-DELETE {{host}}/games/1/offers/1/discount
-Authorization: Bearer {{sellerToken}}
+### Get buyer orders (Requires: BuyerToken)
+GET {{host}}/orders
+Authorization: Bearer {{buyerToken}}
 
-### 3f. Usunięcie oferty (Wymaga: SellerToken)
-DELETE {{host}}/games/1/offers/1
-Authorization: Bearer {{sellerToken}}
+### Get order details (Requires: BuyerToken)
+GET {{host}}/orders/1
+Authorization: Bearer {{buyerToken}}
 
-####
-DELETE {{host}}/games/1
-Authorization: Bearer {{sellerToken}}
+### Cancel order (Requires: BuyerToken)
+POST {{host}}/orders/1/cancel
+Authorization: Bearer {{buyerToken}}
 
-# ==========================================
-# 4. GATUNKI (GENRES)
-# ==========================================
-
-### 4a. Lista gatunków (Publiczny)
+### Get all genres (Public)
 GET {{host}}/genres

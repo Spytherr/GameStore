@@ -13,6 +13,8 @@ builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<IGenresService, GenresService>();
 builder.Services.AddScoped<IGameOffersService, GameOffersService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOrdersService, OrdersService>();
+builder.Services.AddScoped<IPaymentService, MockPaymentService>();
 
 var connectionString = builder.Configuration.GetConnectionString("GameStoreContext");
 builder.AddGameStoreDatabase(connectionString);
@@ -55,6 +57,7 @@ app.MapAuthEndpoints();
 app.MapGamesEndpoints();
 app.MapGenresEndpoints();
 app.MapGameOffersEndpoints();
+app.MapOrdersEndpoints();
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
