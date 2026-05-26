@@ -2,7 +2,7 @@ namespace GameStore.api;
 
 public interface IGamesService
 {
-    Task<List<GameSummaryDto>> GetAllAsync();
+    Task<PagedResult<GameSummaryDto>> GetAllAsync(GamesQueryDto query);
     Task<ServiceResult<GameDetailsDto>> GetByIdAsync(int id);
     Task<ServiceResult<GameDetailsDto>> CreateAsync(CreateGameDto dto);
     Task<ServiceResult> UpdateAsync(int id, UpdateGameDto dto);

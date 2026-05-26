@@ -43,8 +43,17 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
-### Get all games (Public)
-GET {{host}}/games
+### Get all games — paginated (Public)
+GET {{host}}/games?page=1&pageSize=10
+
+### Get games — filtered by genre (Public)
+GET {{host}}/games?genreId=3
+
+### Get games — search by title (Public)
+GET {{host}}/games?search=witcher
+
+### Get games — sorted by release date descending (Public)
+GET {{host}}/games?sortBy=releaseDate&sortOrder=desc
 
 ### Get game details (Public)
 GET {{host}}/games/1
@@ -60,6 +69,17 @@ Content-Type: application/json
   "genreId": 3,
   "imageUrl": "https://example.com/witcher3.jpg",
   "releaseDate": "2015-05-19"
+}
+
+### Add game — validation error test (empty title)
+POST {{host}}/games
+Authorization: Bearer {{sellerToken}}
+Content-Type: application/json
+
+{
+  "title": "",
+  "genreId": 3,
+  "releaseDate": "2020-01-01"
 }
 
 ### Add offer (Requires: SellerToken)

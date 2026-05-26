@@ -4,11 +4,38 @@ namespace GameStore.api;
 
 public class GamesService(GameStoreContext context) : IGamesService
 {
-    public async Task<List<GameSummaryDto>> GetAllAsync()
+    public async Task<PagedResult<GameSummaryDto>> GetAllAsync(GamesQueryDto query)
     {
-        return await context.Games
+        IQueryable<Game> gamesQuery = context.Games
             .Include(g => g.Genre)
-            .Include(g => g.Offers)
+            .Include(g => g.Offers);
+
+        if (query.GenreId.HasValue)
+            gamesQuery = gamesQuery.Where(g => g.GenreId == query.GenreId);
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+            gamesQuery = gamesQuery.Where(g => g.Title.Contains(query.Search));
+
+        gamesQuery = query.SortBy.ToLower() switch
+        {
+            "releasedate" => query.SortOrder.ToLower() == "desc"
+                ? gamesQuery.OrderByDescending(g => g.ReleaseDate)
+                : gamesQuery.OrderBy(g => g.ReleaseDate),
+            "price" => query.SortOrder.ToLower() == "desc"
+                ? gamesQuery.OrderByDescending(g => g.Offers.Any()
+                    ? g.Offers.Min(o => o.Price) : decimal.MaxValue)
+                : gamesQuery.OrderBy(g => g.Offers.Any()
+                    ? g.Offers.Min(o => o.Price) : decimal.MaxValue),
+            _ => query.SortOrder.ToLower() == "desc"
+                ? gamesQuery.OrderByDescending(g => g.Title)
+                : gamesQuery.OrderBy(g => g.Title)
+        };
+
+        var totalCount = await gamesQuery.CountAsync();
+
+        var items = await gamesQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
             .Select(game => new GameSummaryDto(
                 game.Id,
                 game.Title,
@@ -25,6 +52,8 @@ public class GamesService(GameStoreContext context) : IGamesService
             ))
             .AsNoTracking()
             .ToListAsync();
+
+        return new PagedResult<GameSummaryDto>(items, query.Page, query.PageSize, totalCount);
     }
 
     public async Task<ServiceResult<GameDetailsDto>> GetByIdAsync(int id)
