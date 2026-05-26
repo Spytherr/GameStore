@@ -91,5 +91,6 @@ app.MapRawgEndpoints();
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
+await app.SeedGamesFromRawgAsync();
 
 app.Run();
