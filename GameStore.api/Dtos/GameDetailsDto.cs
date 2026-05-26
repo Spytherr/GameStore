@@ -8,5 +8,6 @@ public record GameDetailsDto(
     string GenreName,
     string? ImageUrl,
     DateOnly ReleaseDate,
+    double? Rating,
     List<GameOfferDto> Offers
 );

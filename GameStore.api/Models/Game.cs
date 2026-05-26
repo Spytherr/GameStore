@@ -1,5 +1,3 @@
-using System;
-
 namespace GameStore.api;
 
 public class Game
@@ -11,5 +9,7 @@ public class Game
     public int GenreId { get; set; }
     public string? ImageUrl { get; set; }
     public DateOnly ReleaseDate { get; set; }
+    public int? RawgId { get; set; }
+    public double? Rating { get; set; }
     public List<GameOffer> Offers { get; set; } = [];
 }

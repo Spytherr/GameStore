@@ -26,6 +26,10 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
 
             entity.HasIndex(g => g.Title)
                 .IsUnique();
+
+            entity.HasIndex(g => g.RawgId)
+                .IsUnique()
+                .HasFilter("[RawgId] IS NOT NULL");
         });
 
         modelBuilder.Entity<GameOffer>(entity =>

@@ -17,6 +17,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<IPaymentService, MockPaymentService>();
 
+builder.Services.AddHttpClient<IRawgService, RawgService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Rawg:BaseUrl"]!);
+});
+
 var connectionString = builder.Configuration.GetConnectionString("GameStoreContext");
 builder.AddGameStoreDatabase(connectionString);
 
@@ -82,6 +87,7 @@ app.MapGamesEndpoints();
 app.MapGenresEndpoints();
 app.MapGameOffersEndpoints();
 app.MapOrdersEndpoints();
+app.MapRawgEndpoints();
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();

@@ -48,6 +48,7 @@ public class GamesService(GameStoreContext context) : IGamesService
                     : null,
                 game.Offers.Any(o => o.IsOnSale),
                 game.Offers.Count,
+                game.Rating,
                 game.ReleaseDate
             ))
             .AsNoTracking()
@@ -93,6 +94,7 @@ public class GamesService(GameStoreContext context) : IGamesService
             game.Genre!.Name,
             game.ImageUrl,
             game.ReleaseDate,
+            game.Rating,
             offerDtos
         ));
     }
@@ -131,6 +133,7 @@ public class GamesService(GameStoreContext context) : IGamesService
             game.Genre!.Name,
             game.ImageUrl,
             game.ReleaseDate,
+            game.Rating,
             []
         ));
     }

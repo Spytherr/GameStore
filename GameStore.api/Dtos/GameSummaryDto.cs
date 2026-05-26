@@ -8,5 +8,6 @@ public record GameSummaryDto(
     decimal? LowestPrice,
     bool HasOffersOnSale,
     int TotalOffers,
+    double? Rating,
     DateOnly ReleaseDate
 );
