@@ -13,5 +13,11 @@ public record RawgGameSearchResultDto(
     string? Released,
     [property: JsonPropertyName("background_image")] string? BackgroundImage,
     List<RawgGenreDto>? Genres,
-    double? Rating
+    double? Rating,
+    List<RawgPlatformWrapperDto>? Platforms,
+    List<RawgTagDto>? Tags
 );
+
+public record RawgPlatformWrapperDto(RawgPlatformDto Platform);
+public record RawgPlatformDto(int Id, string Name);
+public record RawgTagDto(int Id, string Name);

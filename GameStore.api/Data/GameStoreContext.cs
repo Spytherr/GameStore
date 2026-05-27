@@ -8,6 +8,7 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
 {
     public DbSet<Game> Games => Set<Game>();
     public DbSet<Genre> Genres => Set<Genre>();
+    public DbSet<Platform> Platforms => Set<Platform>();
     public DbSet<GameOffer> GameOffers => Set<GameOffer>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
@@ -43,7 +44,7 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
             entity.Property(o => o.Stock)
                 .HasDefaultValue(0);
 
-            entity.HasIndex(o => new { o.GameId, o.SellerId })
+            entity.HasIndex(o => new { o.GameId, o.SellerId, o.PlatformId })
                 .IsUnique();
 
             entity.HasOne(o => o.Game)
@@ -53,6 +54,11 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
             entity.HasOne(o => o.Seller)
                 .WithMany(u => u.GameOffers)
                 .HasForeignKey(o => o.SellerId);
+
+            entity.HasOne(o => o.Platform)
+                .WithMany()
+                .HasForeignKey(o => o.PlatformId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Order>(entity =>

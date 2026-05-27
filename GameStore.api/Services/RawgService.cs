@@ -35,6 +35,8 @@ public class RawgService(
     public async Task<ServiceResult<GameDetailsDto>> ImportAsync(int rawgId)
     {
         var existingGame = await context.Games
+            .Include(g => g.Genres)
+            .Include(g => g.Platforms)
             .FirstOrDefaultAsync(g => g.RawgId == rawgId);
 
         if (existingGame is not null)
@@ -56,18 +58,20 @@ public class RawgService(
             return ServiceResult<GameDetailsDto>.ValidationError(
                 "Failed to parse RAWG API response.");
 
-        var genre = await ResolveGenreAsync(rawgGame.Genres);
-
         var titleExists = await context.Games.AnyAsync(g => g.Title == rawgGame.Name);
         if (titleExists)
             return ServiceResult<GameDetailsDto>.Conflict(
                 $"A game with the title \"{rawgGame.Name}\" already exists in the catalog.");
 
+        var gameGenres = await ResolveGenresAsync(rawgGame.Genres);
+        var gamePlatforms = await ResolvePlatformsAsync(rawgGame.Platforms);
+
         var game = new Game
         {
             Title = rawgGame.Name,
             Description = rawgGame.DescriptionRaw?[..Math.Min(rawgGame.DescriptionRaw.Length, 1000)],
-            GenreId = genre.Id,
+            Genres = gameGenres,
+            Platforms = gamePlatforms,
             ImageUrl = rawgGame.BackgroundImage,
             ReleaseDate = ParseReleaseDate(rawgGame.Released),
             RawgId = rawgId,
@@ -81,8 +85,8 @@ public class RawgService(
             game.Id,
             game.Title,
             game.Description,
-            game.GenreId,
-            genre.Name,
+            game.Genres.Select(g => g.Name).ToList(),
+            game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,
             game.ReleaseDate,
             game.Rating,
@@ -90,21 +94,45 @@ public class RawgService(
         ));
     }
 
-    private async Task<Genre> ResolveGenreAsync(List<RawgGenreDto>? rawgGenres)
+    private async Task<List<Genre>> ResolveGenresAsync(List<RawgGenreDto>? rawgGenres)
     {
-        var rawgGenreName = rawgGenres?.FirstOrDefault()?.Name ?? "Other";
+        if (rawgGenres is null || rawgGenres.Count == 0)
+            return [];
 
-        var genre = await context.Genres
-            .FirstOrDefaultAsync(g => g.Name == rawgGenreName);
+        var genres = new List<Genre>();
+        foreach (var rg in rawgGenres)
+        {
+            var genre = await context.Genres.FirstOrDefaultAsync(g => g.Name == rg.Name);
+            if (genre is null)
+            {
+                genre = new Genre { Name = rg.Name };
+                context.Genres.Add(genre);
+                await context.SaveChangesAsync();
+            }
+            genres.Add(genre);
+        }
+        return genres;
+    }
 
-        if (genre is not null)
-            return genre;
+    private async Task<List<Platform>> ResolvePlatformsAsync(List<RawgPlatformWrapperDto>? rawgPlatforms)
+    {
+        if (rawgPlatforms is null || rawgPlatforms.Count == 0)
+            return [];
 
-        genre = new Genre { Name = rawgGenreName };
-        context.Genres.Add(genre);
-        await context.SaveChangesAsync();
-
-        return genre;
+        var platforms = new List<Platform>();
+        foreach (var rp in rawgPlatforms)
+        {
+            var platformName = rp.Platform.Name;
+            var platform = await context.Platforms.FirstOrDefaultAsync(p => p.Name == platformName);
+            if (platform is null)
+            {
+                platform = new Platform { Name = platformName };
+                context.Platforms.Add(platform);
+                await context.SaveChangesAsync();
+            }
+            platforms.Add(platform);
+        }
+        return platforms;
     }
 
     private static DateOnly ParseReleaseDate(string? released)

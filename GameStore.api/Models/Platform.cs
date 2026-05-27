@@ -1,8 +1,6 @@
-using System;
-
 namespace GameStore.api;
 
-public class Genre
+public class Platform
 {
     public int Id { get; set; }
     public required string Name { get; set; }

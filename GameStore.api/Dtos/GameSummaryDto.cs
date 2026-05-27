@@ -3,7 +3,8 @@ namespace GameStore.api;
 public record GameSummaryDto(
     int Id,
     string Title,
-    string Genre,
+    List<string> Genres,
+    List<string> Platforms,
     string? ImageUrl,
     decimal? LowestPrice,
     bool HasOffersOnSale,

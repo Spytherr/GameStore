@@ -14,6 +14,7 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         var offers = await context.GameOffers
             .Where(o => o.GameId == gameId)
             .Include(o => o.Seller)
+            .Include(o => o.Platform)
             .AsNoTracking()
             .ToListAsync();
 
@@ -24,20 +25,30 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
     public async Task<ServiceResult<GameOfferDto>> CreateAsync(
         int gameId, CreateGameOfferDto dto, string sellerId)
     {
-        var gameExists = await context.Games.AnyAsync(g => g.Id == gameId);
-        if (!gameExists)
+        var game = await context.Games
+            .Include(g => g.Platforms)
+            .FirstOrDefaultAsync(g => g.Id == gameId);
+
+        if (game is null)
             return ServiceResult<GameOfferDto>.NotFound(
                 $"Game with ID {gameId} was not found.");
 
+        var isPlatformValid = game.Platforms.Any(p => p.Id == dto.PlatformId);
+        if (!isPlatformValid)
+            return ServiceResult<GameOfferDto>.ValidationError(
+                $"This game is not available on platform with ID {dto.PlatformId}.");
+
         var existingOffer = await context.GameOffers
-            .AnyAsync(o => o.GameId == gameId && o.SellerId == sellerId);
+            .AnyAsync(o => o.GameId == gameId && o.SellerId == sellerId && o.PlatformId == dto.PlatformId);
+        
         if (existingOffer)
             return ServiceResult<GameOfferDto>.Conflict(
-                "You already have an offer for this game.");
+                "You already have an offer for this game on this platform.");
 
         var offer = new GameOffer
         {
             GameId = gameId,
+            PlatformId = dto.PlatformId,
             SellerId = sellerId,
             Price = dto.Price,
             Stock = dto.Stock
@@ -47,6 +58,7 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         await context.SaveChangesAsync();
 
         await context.Entry(offer).Reference(o => o.Seller).LoadAsync();
+        await context.Entry(offer).Reference(o => o.Platform).LoadAsync();
         return ServiceResult<GameOfferDto>.Success(MapToDto(offer));
     }
 
@@ -139,7 +151,8 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
             offer.Price,
             discountedPrice,
             offer.IsOnSale,
-            offer.Stock
+            offer.Stock,
+            offer.Platform?.Name ?? "Unknown"
         );
     }
 }

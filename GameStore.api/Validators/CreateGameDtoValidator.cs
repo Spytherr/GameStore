@@ -10,8 +10,17 @@ public class CreateGameDtoValidator : AbstractValidator<CreateGameDto>
             .NotEmpty().WithMessage("Title is required.")
             .MaximumLength(50).WithMessage("Title cannot exceed 50 characters.");
 
-        RuleFor(x => x.GenreId)
+        RuleFor(x => x.GenreIds)
+            .NotEmpty().WithMessage("At least one GenreId must be provided.");
+
+        RuleForEach(x => x.GenreIds)
             .GreaterThan(0).WithMessage("GenreId must be greater than 0.");
+
+        RuleFor(x => x.PlatformIds)
+            .NotEmpty().WithMessage("At least one PlatformId must be provided.");
+
+        RuleForEach(x => x.PlatformIds)
+            .GreaterThan(0).WithMessage("PlatformId must be greater than 0.");
 
         RuleFor(x => x.ReleaseDate)
             .NotEmpty().WithMessage("Release date is required.");

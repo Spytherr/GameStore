@@ -9,7 +9,9 @@ public record RawgGameDetailsDto(
     string? Released,
     [property: JsonPropertyName("background_image")] string? BackgroundImage,
     List<RawgGenreDto>? Genres,
-    double? Rating
+    double? Rating,
+    List<RawgPlatformWrapperDto>? Platforms,
+    List<RawgTagDto>? Tags
 );
 
 public record RawgGenreDto(

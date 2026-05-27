@@ -7,11 +7,12 @@ public class GamesService(GameStoreContext context) : IGamesService
     public async Task<PagedResult<GameSummaryDto>> GetAllAsync(GamesQueryDto query)
     {
         IQueryable<Game> gamesQuery = context.Games
-            .Include(g => g.Genre)
+            .Include(g => g.Genres)
+            .Include(g => g.Platforms)
             .Include(g => g.Offers);
 
         if (query.GenreId.HasValue)
-            gamesQuery = gamesQuery.Where(g => g.GenreId == query.GenreId);
+            gamesQuery = gamesQuery.Where(g => g.Genres.Any(genre => genre.Id == query.GenreId));
 
         if (!string.IsNullOrWhiteSpace(query.Search))
             gamesQuery = gamesQuery.Where(g => g.Title.Contains(query.Search));
@@ -39,7 +40,8 @@ public class GamesService(GameStoreContext context) : IGamesService
             .Select(game => new GameSummaryDto(
                 game.Id,
                 game.Title,
-                game.Genre!.Name,
+                game.Genres.Select(g => g.Name).ToList(),
+                game.Platforms.Select(p => p.Name).ToList(),
                 game.ImageUrl,
                 game.Offers.Any()
                     ? game.Offers.Min(o => o.IsOnSale
@@ -60,9 +62,12 @@ public class GamesService(GameStoreContext context) : IGamesService
     public async Task<ServiceResult<GameDetailsDto>> GetByIdAsync(int id)
     {
         var game = await context.Games
-            .Include(g => g.Genre)
+            .Include(g => g.Genres)
+            .Include(g => g.Platforms)
             .Include(g => g.Offers)
                 .ThenInclude(o => o.Seller)
+            .Include(g => g.Offers)
+                .ThenInclude(o => o.Platform)
             .FirstOrDefaultAsync(g => g.Id == id);
 
         if (game is null)
@@ -82,7 +87,8 @@ public class GamesService(GameStoreContext context) : IGamesService
                 o.Price,
                 discountedPrice,
                 o.IsOnSale,
-                o.Stock
+                o.Stock,
+                o.Platform?.Name ?? "Unknown"
             );
         }).ToList();
 
@@ -90,8 +96,8 @@ public class GamesService(GameStoreContext context) : IGamesService
             game.Id,
             game.Title,
             game.Description,
-            game.GenreId,
-            game.Genre!.Name,
+            game.Genres.Select(g => g.Name).ToList(),
+            game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,
             game.ReleaseDate,
             game.Rating,
@@ -106,16 +112,22 @@ public class GamesService(GameStoreContext context) : IGamesService
             return ServiceResult<GameDetailsDto>.Conflict(
                 $"A game with the title \"{dto.Title}\" already exists in the catalog.");
 
-        var genreExists = await context.Genres.AnyAsync(g => g.Id == dto.GenreId);
-        if (!genreExists)
+        var genres = await context.Genres.Where(g => dto.GenreIds.Contains(g.Id)).ToListAsync();
+        if (genres.Count != dto.GenreIds.Count)
             return ServiceResult<GameDetailsDto>.ValidationError(
-                $"Genre with ID {dto.GenreId} does not exist.");
+                "One or more provided Genre IDs do not exist.");
+
+        var platforms = await context.Platforms.Where(p => dto.PlatformIds.Contains(p.Id)).ToListAsync();
+        if (platforms.Count != dto.PlatformIds.Count)
+            return ServiceResult<GameDetailsDto>.ValidationError(
+                "One or more provided Platform IDs do not exist.");
 
         Game game = new()
         {
             Title = dto.Title,
             Description = dto.Description,
-            GenreId = dto.GenreId,
+            Genres = genres,
+            Platforms = platforms,
             ImageUrl = dto.ImageUrl,
             ReleaseDate = dto.ReleaseDate
         };
@@ -123,14 +135,12 @@ public class GamesService(GameStoreContext context) : IGamesService
         context.Games.Add(game);
         await context.SaveChangesAsync();
 
-        await context.Entry(game).Reference(g => g.Genre).LoadAsync();
-
         return ServiceResult<GameDetailsDto>.Success(new GameDetailsDto(
             game.Id,
             game.Title,
             game.Description,
-            game.GenreId,
-            game.Genre!.Name,
+            game.Genres.Select(g => g.Name).ToList(),
+            game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,
             game.ReleaseDate,
             game.Rating,
@@ -140,17 +150,26 @@ public class GamesService(GameStoreContext context) : IGamesService
 
     public async Task<ServiceResult> UpdateAsync(int id, UpdateGameDto dto)
     {
-        var game = await context.Games.FindAsync(id);
+        var game = await context.Games
+            .Include(g => g.Genres)
+            .Include(g => g.Platforms)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
         if (game is null)
             return ServiceResult.NotFound($"Game with ID {id} was not found.");
 
-        var genreExists = await context.Genres.AnyAsync(g => g.Id == dto.GenreId);
-        if (!genreExists)
-            return ServiceResult.ValidationError($"Genre with ID {dto.GenreId} does not exist.");
+        var genres = await context.Genres.Where(g => dto.GenreIds.Contains(g.Id)).ToListAsync();
+        if (genres.Count != dto.GenreIds.Count)
+            return ServiceResult.ValidationError("One or more provided Genre IDs do not exist.");
+
+        var platforms = await context.Platforms.Where(p => dto.PlatformIds.Contains(p.Id)).ToListAsync();
+        if (platforms.Count != dto.PlatformIds.Count)
+            return ServiceResult.ValidationError("One or more provided Platform IDs do not exist.");
 
         game.Title = dto.Title;
         game.Description = dto.Description;
-        game.GenreId = dto.GenreId;
+        game.Genres = genres;
+        game.Platforms = platforms;
         game.ImageUrl = dto.ImageUrl;
         game.ReleaseDate = dto.ReleaseDate;
 

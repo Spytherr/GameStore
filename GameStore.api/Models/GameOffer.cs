@@ -7,6 +7,9 @@ public class GameOffer
     public int GameId { get; set; }
     public Game? Game { get; set; }
 
+    public int PlatformId { get; set; }
+    public Platform? Platform { get; set; }
+
     public required string SellerId { get; set; }
     public ApplicationUser? Seller { get; set; }
 
