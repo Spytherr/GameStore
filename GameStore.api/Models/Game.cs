@@ -4,7 +4,8 @@ public class Game
 {
     public int Id { get; set; }
     public required string Title { get; set; }
-    public string? Description { get; set; }
+    public string? Creators { get; set; }
+    public string? Publishers { get; set; }
     public List<Genre> Genres { get; set; } = [];
     public List<Platform> Platforms { get; set; } = [];
     public string? ImageUrl { get; set; }

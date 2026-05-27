@@ -66,10 +66,19 @@ public class RawgService(
         var gameGenres = await ResolveGenresAsync(rawgGame.Genres);
         var gamePlatforms = await ResolvePlatformsAsync(rawgGame.Platforms);
 
+        var creatorsString = rawgGame.Developers is not null && rawgGame.Developers.Count > 0
+            ? string.Join(", ", rawgGame.Developers.Select(d => d.Name))
+            : null;
+
+        var publishersString = rawgGame.Publishers is not null && rawgGame.Publishers.Count > 0
+            ? string.Join(", ", rawgGame.Publishers.Select(p => p.Name))
+            : null;
+
         var game = new Game
         {
             Title = rawgGame.Name,
-            Description = rawgGame.DescriptionRaw?[..Math.Min(rawgGame.DescriptionRaw.Length, 1000)],
+            Creators = creatorsString,
+            Publishers = publishersString,
             Genres = gameGenres,
             Platforms = gamePlatforms,
             ImageUrl = rawgGame.BackgroundImage,
@@ -84,7 +93,8 @@ public class RawgService(
         return ServiceResult<GameDetailsDto>.Success(new GameDetailsDto(
             game.Id,
             game.Title,
-            game.Description,
+            game.Creators,
+            game.Publishers,
             game.Genres.Select(g => g.Name).ToList(),
             game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,

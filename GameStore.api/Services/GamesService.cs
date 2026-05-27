@@ -95,7 +95,8 @@ public class GamesService(GameStoreContext context) : IGamesService
         return ServiceResult<GameDetailsDto>.Success(new GameDetailsDto(
             game.Id,
             game.Title,
-            game.Description,
+            game.Creators,
+            game.Publishers,
             game.Genres.Select(g => g.Name).ToList(),
             game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,
@@ -125,7 +126,8 @@ public class GamesService(GameStoreContext context) : IGamesService
         Game game = new()
         {
             Title = dto.Title,
-            Description = dto.Description,
+            Creators = dto.Creators,
+            Publishers = dto.Publishers,
             Genres = genres,
             Platforms = platforms,
             ImageUrl = dto.ImageUrl,
@@ -138,7 +140,8 @@ public class GamesService(GameStoreContext context) : IGamesService
         return ServiceResult<GameDetailsDto>.Success(new GameDetailsDto(
             game.Id,
             game.Title,
-            game.Description,
+            game.Creators,
+            game.Publishers,
             game.Genres.Select(g => g.Name).ToList(),
             game.Platforms.Select(p => p.Name).ToList(),
             game.ImageUrl,
@@ -167,7 +170,8 @@ public class GamesService(GameStoreContext context) : IGamesService
             return ServiceResult.ValidationError("One or more provided Platform IDs do not exist.");
 
         game.Title = dto.Title;
-        game.Description = dto.Description;
+        game.Creators = dto.Creators;
+        game.Publishers = dto.Publishers;
         game.Genres = genres;
         game.Platforms = platforms;
         game.ImageUrl = dto.ImageUrl;

@@ -85,6 +85,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapGamesEndpoints();
 app.MapGenresEndpoints();
+app.MapPlatformsEndpoints();
 app.MapGameOffersEndpoints();
 app.MapOrdersEndpoints();
 app.MapRawgEndpoints();

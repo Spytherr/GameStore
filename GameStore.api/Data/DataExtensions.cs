@@ -132,6 +132,29 @@ public static class DataExtensions
                 }
             }
 
+            string? creators = null;
+            string? publishers = null;
+
+            try
+            {
+                var detailsResponse = await httpClient.GetAsync($"/api/games/{rawgGame.Id}?key={apiKey}");
+                if (detailsResponse.IsSuccessStatusCode)
+                {
+                    var detailsContent = await detailsResponse.Content.ReadAsStreamAsync();
+                    var details = await JsonSerializer.DeserializeAsync<RawgGameDetailsDto>(detailsContent, jsonOptions);
+
+                    if (details?.Developers is not null && details.Developers.Count > 0)
+                        creators = string.Join(", ", details.Developers.Select(d => d.Name));
+
+                    if (details?.Publishers is not null && details.Publishers.Count > 0)
+                        publishers = string.Join(", ", details.Publishers.Select(p => p.Name));
+                }
+            }
+            catch
+            {
+                // Skip creators/publishers if RAWG details fail
+            }
+
             DateOnly releaseDate = DateOnly.TryParse(rawgGame.Released, out var parsed)
                 ? parsed
                 : DateOnly.FromDateTime(DateTime.UtcNow);
@@ -139,6 +162,8 @@ public static class DataExtensions
             context.Games.Add(new Game
             {
                 Title = rawgGame.Name,
+                Creators = creators,
+                Publishers = publishers,
                 Genres = gameGenres,
                 Platforms = gamePlatforms,
                 ImageUrl = rawgGame.BackgroundImage,

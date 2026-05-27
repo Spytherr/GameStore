@@ -28,7 +28,10 @@ public class UpdateGameDtoValidator : AbstractValidator<UpdateGameDto>
         RuleFor(x => x.ImageUrl)
             .MaximumLength(500).When(x => x.ImageUrl is not null);
 
-        RuleFor(x => x.Description)
-            .MaximumLength(1000).When(x => x.Description is not null);
+        RuleFor(x => x.Creators)
+            .MaximumLength(500).When(x => x.Creators is not null);
+
+        RuleFor(x => x.Publishers)
+            .MaximumLength(500).When(x => x.Publishers is not null);
     }
 }

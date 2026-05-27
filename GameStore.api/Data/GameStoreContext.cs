@@ -19,8 +19,11 @@ public class GameStoreContext(DbContextOptions<GameStoreContext> options)
 
         modelBuilder.Entity<Game>(entity =>
         {
-            entity.Property(g => g.Description)
-                .HasMaxLength(1000);
+            entity.Property(g => g.Creators)
+                .HasMaxLength(500);
+
+            entity.Property(g => g.Publishers)
+                .HasMaxLength(500);
 
             entity.Property(g => g.ImageUrl)
                 .HasMaxLength(500);

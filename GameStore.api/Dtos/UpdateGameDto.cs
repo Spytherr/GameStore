@@ -2,7 +2,8 @@ namespace GameStore.api;
 
 public record UpdateGameDto(
     string Title,
-    string? Description,
+    string? Creators,
+    string? Publishers,
     List<int> GenreIds,
     List<int> PlatformIds,
     string? ImageUrl,
