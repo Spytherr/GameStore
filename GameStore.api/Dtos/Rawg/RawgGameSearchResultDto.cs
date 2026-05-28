@@ -15,7 +15,7 @@ public record RawgGameSearchResultDto(
     List<RawgGenreDto>? Genres,
     double? Rating,
     List<RawgPlatformWrapperDto>? Platforms,
-    List<RawgTagDto>? Tags
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<RawgTagDto>? Tags
 );
 
 public record RawgPlatformWrapperDto(RawgPlatformDto Platform);

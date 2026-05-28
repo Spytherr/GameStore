@@ -44,7 +44,11 @@ Content-Type: application/json
 }
 
 ### Search RAWG for games (Requires: SellerToken)
-GET {{host}}/rawg/search?query=witcher
+GET {{host}}/rawg/search?query=Tears%20of%20the%20Kingdom
+Authorization: Bearer {{sellerToken}}
+
+### Get RAWG game details (Requires: SellerToken)
+GET {{host}}/rawg/games/3327
 Authorization: Bearer {{sellerToken}}
 
 ### Import game from RAWG (Requires: SellerToken)
@@ -53,7 +57,7 @@ Authorization: Bearer {{sellerToken}}
 Content-Type: application/json
 
 {
-  "rawgId": 3328
+  "rawgId": 327239
 }
 
 ###

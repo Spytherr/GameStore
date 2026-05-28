@@ -13,11 +13,17 @@ public static class RawgEndpoints
             var result = await service.SearchAsync(query);
             return result.ToHttpResult();
         });
+        group.MapGet("/games/{rawgId}", async (int rawgId, IRawgService service) =>
+        {
+            var result = await service.GetGameDetailsAsync(rawgId);
+            return result.ToHttpResult();
+        }).WithDescription("Get detailed information about a game from RAWG by its RAWG ID.");
 
         group.MapPost("/import", async (RawgImportDto dto, IRawgService service) =>
         {
             var result = await service.ImportAsync(dto.RawgId);
             return result.ToHttpResult();
-        }).AddEndpointFilter<ValidationFilter<RawgImportDto>>();
+        }).AddEndpointFilter<ValidationFilter<RawgImportDto>>()
+          .WithDescription("Import a game from RAWG by its RAWG ID.");
     }
 }

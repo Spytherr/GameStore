@@ -28,8 +28,29 @@ public class RawgService(
         var result = await JsonSerializer.DeserializeAsync<RawgSearchResponseDto>(
             content, JsonOptions);
 
-        return ServiceResult<List<RawgGameSearchResultDto>>.Success(
-            result?.Results ?? []);
+        var searchResults = result?.Results ?? [];
+        var resultsWithoutTags = searchResults.Select(r => r with { Tags = null }).ToList();
+
+        return ServiceResult<List<RawgGameSearchResultDto>>.Success(resultsWithoutTags);
+    }
+    public async Task<ServiceResult<RawgGameDetailsDto>> GetGameDetailsAsync(int rawgId)
+    {
+        var response = await httpClient.GetAsync(
+            $"/api/games/{rawgId}?key={ApiKey}");
+
+        if (!response.IsSuccessStatusCode)
+            return ServiceResult<RawgGameDetailsDto>.ValidationError(
+                $"Failed to fetch details for RAWG ID {rawgId}.");
+
+        var content = await response.Content.ReadAsStreamAsync();
+        var result = await JsonSerializer.DeserializeAsync<RawgGameDetailsDto>(
+            content, JsonOptions);
+
+        if (result is null)
+            return ServiceResult<RawgGameDetailsDto>.ValidationError(
+                "Failed to parse RAWG API response.");
+
+        return ServiceResult<RawgGameDetailsDto>.Success(result);
     }
 
     public async Task<ServiceResult<GameDetailsDto>> ImportAsync(int rawgId)
