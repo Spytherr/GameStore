@@ -36,7 +36,7 @@ public static class GameOffersEndpoints
             IGameOffersService service, ClaimsPrincipal user) =>
         {
             var sellerId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await service.DeleteAsync(offerId, sellerId);
+            var result = await service.DeleteAsync(gameId, offerId, sellerId);
             return result.ToHttpResult();
         }).RequireAuthorization("SellerOnly");
 

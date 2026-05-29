@@ -81,12 +81,15 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> DeleteAsync(int offerId, string sellerId)
+    public async Task<ServiceResult> DeleteAsync(int gameId, int offerId, string sellerId)
     {
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
                 $"Offer with ID {offerId} was not found.");
+        if (offer.GameId != gameId)
+            return ServiceResult.ValidationError(
+                $"Offer with ID {offerId} does not belong to game with ID {gameId}.");
 
         if (offer.SellerId != sellerId)
             return ServiceResult.ValidationError(
