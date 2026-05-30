@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace GameStore.api;
 
 public static class PlatformsEndpoints
@@ -8,9 +10,12 @@ public static class PlatformsEndpoints
 
         group.MapGet("/", async (GameStoreContext context) =>
         {
-            var platforms = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
-                .ToListAsync(context.Platforms);
-            return platforms.Select(p => new { p.Id, p.Name });
+            var platforms = await context.Platforms
+                .Select(p => new PlatformDto(p.Id, p.Name))
+                .AsNoTracking()
+                .ToListAsync();
+
+            return Results.Ok(platforms);
         });
     }
 }

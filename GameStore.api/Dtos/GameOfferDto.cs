@@ -7,6 +7,7 @@ public record GameOfferDto(
     decimal Price,
     decimal? DiscountedPrice,
     bool IsOnSale,
+    decimal DiscountPercentage,
     int Stock,
     string PlatformName
 );

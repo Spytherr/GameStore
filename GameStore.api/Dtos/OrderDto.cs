@@ -13,6 +13,7 @@ public record OrderItemDto(
     int Id,
     string GameTitle,
     string SellerName,
+    string PlatformName,
     decimal UnitPrice,
     int Quantity,
     decimal Subtotal

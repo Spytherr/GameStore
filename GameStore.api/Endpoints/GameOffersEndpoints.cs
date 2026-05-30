@@ -27,7 +27,7 @@ public static class GameOffersEndpoints
             UpdateGameOfferDto dto, IGameOffersService service, ClaimsPrincipal user) =>
         {
             var sellerId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await service.UpdateAsync(offerId, dto, sellerId);
+            var result = await service.UpdateAsync(gameId, offerId, dto, sellerId);
             return result.ToHttpResult();
         }).RequireAuthorization("SellerOnly")
           .AddEndpointFilter<ValidationFilter<UpdateGameOfferDto>>();
@@ -44,7 +44,7 @@ public static class GameOffersEndpoints
             ApplyOfferDiscountDto dto, IGameOffersService service, ClaimsPrincipal user) =>
         {
             var sellerId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await service.ApplyDiscountAsync(offerId, dto.DiscountPercentage, sellerId);
+            var result = await service.ApplyDiscountAsync(gameId, offerId, dto.DiscountPercentage, sellerId);
             return result.ToHttpResult();
         }).RequireAuthorization("SellerOnly")
           .AddEndpointFilter<ValidationFilter<ApplyOfferDiscountDto>>();
@@ -53,7 +53,7 @@ public static class GameOffersEndpoints
             IGameOffersService service, ClaimsPrincipal user) =>
         {
             var sellerId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var result = await service.RemoveDiscountAsync(offerId, sellerId);
+            var result = await service.RemoveDiscountAsync(gameId, offerId, sellerId);
             return result.ToHttpResult();
         }).RequireAuthorization("SellerOnly");
     }

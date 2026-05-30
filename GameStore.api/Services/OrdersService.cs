@@ -11,64 +11,76 @@ public class OrdersService(
         if (dto.Items is null || dto.Items.Count == 0)
             return ServiceResult<OrderDto>.ValidationError("Order must contain at least one item.");
 
-        var orderItems = new List<OrderItem>();
+        await using var transaction = await context.Database.BeginTransactionAsync();
 
-        foreach (var item in dto.Items)
+        try
         {
-            var offer = await context.GameOffers
-                .Include(o => o.Game)
-                .Include(o => o.Seller)
-                .FirstOrDefaultAsync(o => o.Id == item.GameOfferId);
+            var orderItems = new List<OrderItem>();
 
-            if (offer is null)
-                return ServiceResult<OrderDto>.NotFound(
-                    $"Game offer with ID {item.GameOfferId} was not found.");
-
-            if (offer.Stock < item.Quantity)
-                return ServiceResult<OrderDto>.ValidationError(
-                    $"Insufficient stock for \"{offer.Game!.Title}\". " +
-                    $"Requested: {item.Quantity}, available: {offer.Stock}.");
-
-            var unitPrice = offer.IsOnSale
-                ? Math.Round(offer.Price * (1 - offer.DiscountPercentage / 100), 2)
-                : offer.Price;
-
-            orderItems.Add(new OrderItem
+            foreach (var item in dto.Items)
             {
-                GameOfferId = offer.Id,
-                GameTitle = offer.Game!.Title,
-                SellerName = offer.Seller?.DisplayName ?? "Unknown",
-                UnitPrice = unitPrice,
-                Quantity = item.Quantity
-            });
+                var offer = await context.GameOffers
+                    .Include(o => o.Game)
+                    .Include(o => o.Seller)
+                    .Include(o => o.Platform)
+                    .FirstOrDefaultAsync(o => o.Id == item.GameOfferId);
+
+                if (offer is null)
+                    return ServiceResult<OrderDto>.NotFound(
+                        $"Game offer with ID {item.GameOfferId} was not found.");
+
+                if (offer.Stock < item.Quantity)
+                    return ServiceResult<OrderDto>.ValidationError(
+                        $"Insufficient stock for \"{offer.Game!.Title}\". " +
+                        $"Requested: {item.Quantity}, available: {offer.Stock}.");
+
+                var unitPrice = offer.IsOnSale
+                    ? Math.Round(offer.Price * (1 - offer.DiscountPercentage / 100), 2)
+                    : offer.Price;
+
+                offer.Stock -= item.Quantity;
+
+                orderItems.Add(new OrderItem
+                {
+                    GameOfferId = offer.Id,
+                    GameTitle = offer.Game!.Title,
+                    SellerName = offer.Seller?.DisplayName ?? "Unknown",
+                    PlatformName = offer.Platform?.Name ?? "Unknown",
+                    UnitPrice = unitPrice,
+                    Quantity = item.Quantity
+                });
+            }
+
+            var totalAmount = orderItems.Sum(oi => oi.UnitPrice * oi.Quantity);
+
+            var paymentResult = await paymentService.ProcessPaymentAsync(totalAmount, "PLN");
+            if (!paymentResult.IsSuccess)
+            {
+                await transaction.RollbackAsync();
+                return ServiceResult<OrderDto>.ValidationError(
+                    $"Payment failed: {paymentResult.ErrorMessage}");
+            }
+
+            var order = new Order
+            {
+                BuyerId = buyerId,
+                TotalAmount = totalAmount,
+                Status = OrderStatus.Paid,
+                PaymentTransactionId = paymentResult.TransactionId,
+                Items = orderItems
+            };
+
+            context.Orders.Add(order);
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return ServiceResult<OrderDto>.Success(MapToDto(order));
         }
-
-        var totalAmount = orderItems.Sum(oi => oi.UnitPrice * oi.Quantity);
-
-        var paymentResult = await paymentService.ProcessPaymentAsync(totalAmount, "PLN");
-        if (!paymentResult.IsSuccess)
-            return ServiceResult<OrderDto>.ValidationError(
-                $"Payment failed: {paymentResult.ErrorMessage}");
-
-        foreach (var item in orderItems)
+        catch
         {
-            var offer = await context.GameOffers.FindAsync(item.GameOfferId);
-            offer!.Stock -= item.Quantity;
+            await transaction.RollbackAsync();
+            throw;
         }
-
-        var order = new Order
-        {
-            BuyerId = buyerId,
-            TotalAmount = totalAmount,
-            Status = OrderStatus.Paid,
-            PaymentTransactionId = paymentResult.TransactionId,
-            Items = orderItems
-        };
-
-        context.Orders.Add(order);
-        await context.SaveChangesAsync();
-
-        return ServiceResult<OrderDto>.Success(MapToDto(order));
     }
 
     public async Task<ServiceResult<List<OrderDto>>> GetByBuyerAsync(string buyerId)
@@ -95,7 +107,7 @@ public class OrdersService(
                 $"Order with ID {orderId} was not found.");
 
         if (order.BuyerId != buyerId)
-            return ServiceResult<OrderDto>.ValidationError(
+            return ServiceResult<OrderDto>.Forbidden(
                 "You do not have permission to view this order.");
 
         return ServiceResult<OrderDto>.Success(MapToDto(order));
@@ -112,7 +124,7 @@ public class OrdersService(
                 $"Order with ID {orderId} was not found.");
 
         if (order.BuyerId != buyerId)
-            return ServiceResult.ValidationError(
+            return ServiceResult.Forbidden(
                 "You do not have permission to cancel this order.");
 
         if (order.Status != OrderStatus.Paid)
@@ -144,6 +156,7 @@ public class OrdersService(
                 oi.Id,
                 oi.GameTitle,
                 oi.SellerName,
+                oi.PlatformName,
                 oi.UnitPrice,
                 oi.Quantity,
                 oi.UnitPrice * oi.Quantity

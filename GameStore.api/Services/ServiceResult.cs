@@ -4,7 +4,8 @@ public enum ServiceErrorType
 {
     NotFound,
     ValidationError,
-    Conflict
+    Conflict,
+    Forbidden
 }
 
 public class ServiceResult
@@ -24,6 +25,7 @@ public class ServiceResult
     public static ServiceResult NotFound(string message) => new(false, message, ServiceErrorType.NotFound);
     public static ServiceResult ValidationError(string message) => new(false, message, ServiceErrorType.ValidationError);
     public static ServiceResult Conflict(string message) => new(false, message, ServiceErrorType.Conflict);
+    public static ServiceResult Forbidden(string message) => new(false, message, ServiceErrorType.Forbidden);
 }
 
 public class ServiceResult<T> : ServiceResult
@@ -40,4 +42,5 @@ public class ServiceResult<T> : ServiceResult
     public new static ServiceResult<T> NotFound(string message) => new(false, default, message, ServiceErrorType.NotFound);
     public new static ServiceResult<T> ValidationError(string message) => new(false, default, message, ServiceErrorType.ValidationError);
     public new static ServiceResult<T> Conflict(string message) => new(false, default, message, ServiceErrorType.Conflict);
+    public new static ServiceResult<T> Forbidden(string message) => new(false, default, message, ServiceErrorType.Forbidden);
 }

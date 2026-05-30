@@ -12,6 +12,7 @@ public class OrderItem
 
     public required string GameTitle { get; set; }
     public required string SellerName { get; set; }
+    public required string PlatformName { get; set; }
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
 }

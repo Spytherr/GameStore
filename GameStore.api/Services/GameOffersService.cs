@@ -63,15 +63,19 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
     }
 
     public async Task<ServiceResult> UpdateAsync(
-        int offerId, UpdateGameOfferDto dto, string sellerId)
+        int gameId, int offerId, UpdateGameOfferDto dto, string sellerId)
     {
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
                 $"Offer with ID {offerId} was not found.");
 
-        if (offer.SellerId != sellerId)
+        if (offer.GameId != gameId)
             return ServiceResult.ValidationError(
+                $"Offer with ID {offerId} does not belong to game with ID {gameId}.");
+
+        if (offer.SellerId != sellerId)
+            return ServiceResult.Forbidden(
                 "You do not have permission to edit this offer.");
 
         offer.Price = dto.Price;
@@ -87,12 +91,13 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         if (offer is null)
             return ServiceResult.NotFound(
                 $"Offer with ID {offerId} was not found.");
+
         if (offer.GameId != gameId)
             return ServiceResult.ValidationError(
                 $"Offer with ID {offerId} does not belong to game with ID {gameId}.");
 
         if (offer.SellerId != sellerId)
-            return ServiceResult.ValidationError(
+            return ServiceResult.Forbidden(
                 "You do not have permission to delete this offer.");
 
         context.GameOffers.Remove(offer);
@@ -101,15 +106,19 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
     }
 
     public async Task<ServiceResult> ApplyDiscountAsync(
-        int offerId, decimal discountPercentage, string sellerId)
+        int gameId, int offerId, decimal discountPercentage, string sellerId)
     {
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
                 $"Offer with ID {offerId} was not found.");
 
-        if (offer.SellerId != sellerId)
+        if (offer.GameId != gameId)
             return ServiceResult.ValidationError(
+                $"Offer with ID {offerId} does not belong to game with ID {gameId}.");
+
+        if (offer.SellerId != sellerId)
+            return ServiceResult.Forbidden(
                 "You do not have permission to edit this offer.");
 
         if (discountPercentage < 1 || discountPercentage > 90)
@@ -123,15 +132,19 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> RemoveDiscountAsync(int offerId, string sellerId)
+    public async Task<ServiceResult> RemoveDiscountAsync(int gameId, int offerId, string sellerId)
     {
         var offer = await context.GameOffers.FindAsync(offerId);
         if (offer is null)
             return ServiceResult.NotFound(
                 $"Offer with ID {offerId} was not found.");
 
-        if (offer.SellerId != sellerId)
+        if (offer.GameId != gameId)
             return ServiceResult.ValidationError(
+                $"Offer with ID {offerId} does not belong to game with ID {gameId}.");
+
+        if (offer.SellerId != sellerId)
+            return ServiceResult.Forbidden(
                 "You do not have permission to edit this offer.");
 
         offer.DiscountPercentage = 0;
@@ -154,6 +167,7 @@ public class GameOffersService(GameStoreContext context) : IGameOffersService
             offer.Price,
             discountedPrice,
             offer.IsOnSale,
+            offer.DiscountPercentage,
             offer.Stock,
             offer.Platform?.Name ?? "Unknown"
         );

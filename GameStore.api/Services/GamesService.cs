@@ -14,6 +14,9 @@ public class GamesService(GameStoreContext context) : IGamesService
         if (query.GenreId.HasValue)
             gamesQuery = gamesQuery.Where(g => g.Genres.Any(genre => genre.Id == query.GenreId));
 
+        if (query.PlatformId.HasValue)
+            gamesQuery = gamesQuery.Where(g => g.Platforms.Any(platform => platform.Id == query.PlatformId));
+
         if (!string.IsNullOrWhiteSpace(query.Search))
             gamesQuery = gamesQuery.Where(g => g.Title.Contains(query.Search));
 
@@ -24,9 +27,13 @@ public class GamesService(GameStoreContext context) : IGamesService
                 : gamesQuery.OrderBy(g => g.ReleaseDate),
             "price" => query.SortOrder.ToLower() == "desc"
                 ? gamesQuery.OrderByDescending(g => g.Offers.Any()
-                    ? g.Offers.Min(o => o.Price) : decimal.MaxValue)
+                    ? g.Offers.Min(o => o.IsOnSale
+                        ? o.Price * (1 - o.DiscountPercentage / 100)
+                        : o.Price) : decimal.MaxValue)
                 : gamesQuery.OrderBy(g => g.Offers.Any()
-                    ? g.Offers.Min(o => o.Price) : decimal.MaxValue),
+                    ? g.Offers.Min(o => o.IsOnSale
+                        ? o.Price * (1 - o.DiscountPercentage / 100)
+                        : o.Price) : decimal.MaxValue),
             _ => query.SortOrder.ToLower() == "desc"
                 ? gamesQuery.OrderByDescending(g => g.Title)
                 : gamesQuery.OrderBy(g => g.Title)
@@ -87,6 +94,7 @@ public class GamesService(GameStoreContext context) : IGamesService
                 o.Price,
                 discountedPrice,
                 o.IsOnSale,
+                o.DiscountPercentage,
                 o.Stock,
                 o.Platform?.Name ?? "Unknown"
             );
@@ -160,6 +168,10 @@ public class GamesService(GameStoreContext context) : IGamesService
 
         if (game is null)
             return ServiceResult.NotFound($"Game with ID {id} was not found.");
+
+        var titleTaken = await context.Games.AnyAsync(g => g.Title == dto.Title && g.Id != id);
+        if (titleTaken)
+            return ServiceResult.Conflict($"A game with the title \"{dto.Title}\" already exists in the catalog.");
 
         var genres = await context.Genres.Where(g => dto.GenreIds.Contains(g.Id)).ToListAsync();
         if (genres.Count != dto.GenreIds.Count)
