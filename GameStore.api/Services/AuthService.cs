@@ -44,7 +44,7 @@ public class AuthService(
             configuration.GetValue<int>("Jwt:ExpirationInDays"));
 
         return ServiceResult<AuthResponseDto>.Success(new AuthResponseDto(
-            token, user.Email!, user.DisplayName, dto.Role, expiration));
+            token, user.Id, user.Email!, user.DisplayName, dto.Role, expiration));
     }
 
     public async Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto)
@@ -67,7 +67,7 @@ public class AuthService(
             configuration.GetValue<int>("Jwt:ExpirationInDays"));
 
         return ServiceResult<AuthResponseDto>.Success(new AuthResponseDto(
-            token, user.Email!, user.DisplayName, role, expiration));
+            token, user.Id, user.Email!, user.DisplayName, role, expiration));
     }
 
     private string GenerateJwtToken(ApplicationUser user, string role)

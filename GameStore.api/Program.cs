@@ -78,6 +78,16 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async httpContext =>
+    {
+        httpContext.Response.StatusCode = 500;
+        httpContext.Response.ContentType = "application/json";
+        await httpContext.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred." });
+    });
+});
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
