@@ -20,6 +20,9 @@ public class GamesService(GameStoreContext context) : IGamesService
         if (!string.IsNullOrWhiteSpace(query.Search))
             gamesQuery = gamesQuery.Where(g => g.Title.Contains(query.Search));
 
+        if (query.OnSale == true)
+            gamesQuery = gamesQuery.Where(g => g.Offers.Any(o => o.IsOnSale));
+
         gamesQuery = query.SortBy.ToLower() switch
         {
             "releasedate" => query.SortOrder.ToLower() == "desc"
@@ -34,6 +37,9 @@ public class GamesService(GameStoreContext context) : IGamesService
                     ? g.Offers.Min(o => o.IsOnSale
                         ? o.Price * (1 - o.DiscountPercentage / 100)
                         : o.Price) : decimal.MaxValue),
+            "rating" => query.SortOrder.ToLower() == "desc"
+                ? gamesQuery.OrderByDescending(g => g.Rating ?? 0)
+                : gamesQuery.OrderBy(g => g.Rating ?? 0),
             _ => query.SortOrder.ToLower() == "desc"
                 ? gamesQuery.OrderByDescending(g => g.Title)
                 : gamesQuery.OrderBy(g => g.Title)

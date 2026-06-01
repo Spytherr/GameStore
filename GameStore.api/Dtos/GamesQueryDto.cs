@@ -5,6 +5,7 @@ public record GamesQueryDto(
     int PageSize = 10,
     int? GenreId = null,
     int? PlatformId = null,
+    bool? OnSale = null,
     string? Search = null,
     string SortBy = "title",
     string SortOrder = "asc"
