@@ -6,6 +6,7 @@ public static class RawgEndpoints
     {
         var group = app.MapGroup("/rawg")
             .RequireAuthorization("SellerOnly")
+            .RequireRateLimiting("write")
             .WithTags("RAWG Import");
 
         group.MapGet("/search", async (string query, IRawgService service) =>

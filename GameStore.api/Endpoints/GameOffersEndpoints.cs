@@ -6,7 +6,7 @@ public static class GameOffersEndpoints
 {
     public static void MapGameOffersEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/games/{gameId}/offers").WithTags("Game Offers");
+        var group = app.MapGroup("/games/{gameId}/offers").WithTags("Game Offers").RequireRateLimiting("write");
 
         group.MapGet("/", async (int gameId, IGameOffersService service) =>
         {

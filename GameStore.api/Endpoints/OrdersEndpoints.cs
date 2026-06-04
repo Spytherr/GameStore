@@ -8,6 +8,7 @@ public static class OrdersEndpoints
     {
         var group = app.MapGroup("/orders")
             .RequireAuthorization("BuyerOnly")
+            .RequireRateLimiting("write")
             .WithTags("Orders");
 
         group.MapPost("/", async (CreateOrderDto dto, IOrdersService service, ClaimsPrincipal user) =>

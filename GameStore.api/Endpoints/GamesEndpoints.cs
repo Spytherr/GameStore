@@ -6,7 +6,7 @@ public static class GamesEndpoints
 
     public static void MapGamesEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/games").WithTags("Games");
+        var group = app.MapGroup("/games").WithTags("Games").RequireRateLimiting("global");
 
         group.MapGet("/", async ([AsParameters] GamesQueryDto query, IGamesService service) =>
             await service.GetAllAsync(query))

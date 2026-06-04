@@ -181,6 +181,50 @@ public static class DataExtensions
         httpClient.Dispose();
     }
 
+    public static async Task ResetDemoDataAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GameStoreContext>();
+
+        var hasOffers = await context.GameOffers.AnyAsync();
+        var hasOrders = await context.Orders.AnyAsync();
+
+        if (!hasOffers && !hasOrders)
+            return;
+
+        var latestOrder = await context.Orders
+            .OrderByDescending(o => o.OrderDate)
+            .FirstOrDefaultAsync();
+
+        var cutoff = DateTime.UtcNow.AddHours(-24);
+        var shouldReset = latestOrder is null
+            ? hasOffers
+            : latestOrder.OrderDate < cutoff;
+
+        if (!shouldReset)
+            return;
+
+        Console.WriteLine("[Reset] Demo data is older than 24 hours. Resetting...");
+
+        context.OrderItems.RemoveRange(context.OrderItems);
+        await context.SaveChangesAsync();
+
+        context.Orders.RemoveRange(context.Orders);
+        await context.SaveChangesAsync();
+
+        context.GameOffers.RemoveRange(context.GameOffers);
+        await context.SaveChangesAsync();
+
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var users = await userManager.Users.ToListAsync();
+        foreach (var user in users)
+        {
+            await userManager.DeleteAsync(user);
+        }
+
+        Console.WriteLine("[Reset] Demo data reset complete. Users, offers, and orders cleared.");
+    }
+
     public static void AddGameStoreDatabase(this WebApplicationBuilder builder, string? connectionString)
     {
         builder.Services.AddSqlServer<GameStoreContext>(connectionString);

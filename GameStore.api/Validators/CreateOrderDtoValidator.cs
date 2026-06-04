@@ -7,7 +7,8 @@ public class CreateOrderDtoValidator : AbstractValidator<CreateOrderDto>
     public CreateOrderDtoValidator()
     {
         RuleFor(x => x.Items)
-            .NotEmpty().WithMessage("Order must contain at least one item.");
+            .NotEmpty().WithMessage("Order must contain at least one item.")
+            .Must(items => items.Count <= 10).WithMessage("Order cannot contain more than 10 items.");
 
         RuleForEach(x => x.Items).ChildRules(item =>
         {

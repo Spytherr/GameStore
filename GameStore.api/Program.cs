@@ -1,8 +1,10 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using GameStore.api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -54,13 +56,42 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("SellerOnly", policy => policy.RequireRole("Seller"))
     .AddPolicy("BuyerOnly", policy => policy.RequireRole("Buyer"));
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+
+    options.AddFixedWindowLimiter("global", opt =>
+    {
+        opt.PermitLimit = 30;
+        opt.Window = TimeSpan.FromSeconds(10);
+        opt.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("auth", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("write", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+});
+
 builder.Services.AddOpenApi();
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:5173", "http://localhost:5174"];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -68,15 +99,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.Title = "GameStore API";
-        options.WithTheme(ScalarTheme.DeepSpace);
-    });
-}
+    options.Title = "GameStore API";
+    options.WithTheme(ScalarTheme.DeepSpace);
+});
 
 app.UseExceptionHandler(errorApp =>
 {
@@ -88,6 +116,7 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
+app.UseRateLimiter();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -102,6 +131,7 @@ app.MapRawgEndpoints();
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
+await app.ResetDemoDataAsync();
 await app.SeedGamesFromRawgAsync();
 
 app.Run();
