@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using System.Threading.RateLimiting;
 using FluentValidation;
@@ -7,8 +8,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -18,6 +27,7 @@ builder.Services.AddScoped<IGameOffersService, GameOffersService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<IPaymentService, MockPaymentService>();
+builder.Services.AddScoped<IRawgService, RawgService>();
 
 builder.Services.AddHttpClient<IRawgService, RawgService>(client =>
 {
@@ -82,7 +92,32 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info ??= new OpenApiInfo();
+        document.Info.Title = "GameStore API";
+        document.Info.Version = "v1";
+        document.Info.Description = "Welcome to the GameStore API!\n\n" +
+                                    "Explore all available endpoints below. Some operations require authentication.\n\n" +
+                                    "To use protected endpoints, click **Authorize** and paste your JWT token.";
+
+        document.Components ??= new OpenApiComponents();
+        var securitySchemes = new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme> 
+        { 
+            ["Bearer"] = new OpenApiSecurityScheme 
+            { 
+                Type = SecuritySchemeType.Http, 
+                Scheme = "bearer", 
+                BearerFormat = "JWT", 
+                Description = "Enter your JWT token (e.g. seller token)." 
+            } 
+        };
+        document.Components.SecuritySchemes = securitySchemes;
+        return Task.CompletedTask;
+    });
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? ["http://localhost:5173", "http://localhost:5174"];
@@ -98,6 +133,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.MapOpenApi();
 app.MapScalarApiReference(options =>
@@ -131,7 +168,20 @@ app.MapRawgEndpoints();
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
-await app.ResetDemoDataAsync();
-await app.SeedGamesFromRawgAsync();
+//await app.ResetDemoDataAsync();
+
+// Uruchamiamy pobieranie z RAWG w tle. Dzięki temu app.Run() wykona się od razu,
+// a Azure nie ubije procesu za zbyt długi startup i nie rzuci błędem 504.
+_ = Task.Run(async () =>
+{
+    try
+    {
+        await app.SeedGamesFromRawgAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Background seeding error: {ex.Message}");
+    }
+});
 
 app.Run();

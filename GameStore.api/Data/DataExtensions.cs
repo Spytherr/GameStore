@@ -54,10 +54,13 @@ public static class DataExtensions
 
         var allGames = new List<RawgGameSearchResultDto>();
 
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var pastDate = DateTime.UtcNow.AddYears(-7).ToString("yyyy-MM-dd");
+
         for (int page = 1; page <= 5; page++)
         {
             var response = await httpClient.GetAsync(
-                $"/api/games?key={apiKey}&page_size=20&page={page}&ordering=-added&metacritic=65,100");
+                $"/api/games?key={apiKey}&page_size=10&page={page}&dates={pastDate},{currentDate}&ordering=-added&metacritic=65,100");
 
             if (!response.IsSuccessStatusCode)
             {

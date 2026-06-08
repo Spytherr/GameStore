@@ -1,6 +1,6 @@
 @host = http://localhost:5012
 
-@sellerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjI2NWMzZmEwLWFiODktNDZmNC05MjM4LWViYWQ0NmNmMWY4YyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InNlbGxlckB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJKYW51c3ogQml6bmVzdSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlNlbGxlciIsImV4cCI6MTc4MDY5MjQ4NSwiaXNzIjoiR2FtZVN0b3JlLmFwaSIsImF1ZCI6IkdhbWVTdG9yZS5jbGllbnQifQ.tAUB5ei1gK3ZUSDlkUN7elrBm1hqukuPqPaJ6jJchpA
+@sellerToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImVkNTYwYWE4LTQ5MGItNGJhYS05MDYwLThkZjYzZjk4OGJhOSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InNlbGxlckB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJKYW51c3ogQml6bmVzdSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlNlbGxlciIsImV4cCI6MTc4MTI4NjcxNiwiaXNzIjoiR2FtZVN0b3JlLmFwaSIsImF1ZCI6IkdhbWVTdG9yZS5jbGllbnQifQ.BvQH03KXg0l6OaUGIqDnKobokVM13iiLTxA6daHMkFM
 @buyerToken = YOUR_BUYER_TOKEN_HERE
 
 ### Register Seller
@@ -95,14 +95,14 @@ Content-Type: application/json
 }
 
 ### Add offer (Requires: SellerToken)
-POST {{host}}/games/5/offers
+POST {{host}}/games/1/offers
 Authorization: Bearer {{sellerToken}}
 Content-Type: application/json
 
 {
   "price": 5.99,
   "stock": 100,
-  "platformId": 3
+  "platformId": 1
 }
 ###
 
