@@ -170,8 +170,7 @@ app.MigrateDatabase();
 await app.SeedRolesAsync();
 //await app.ResetDemoDataAsync();
 
-// Uruchamiamy pobieranie z RAWG w tle. Dzięki temu app.Run() wykona się od razu,
-// a Azure nie ubije procesu za zbyt długi startup i nie rzuci błędem 504.
+
 _ = Task.Run(async () =>
 {
     try
@@ -185,3 +184,5 @@ _ = Task.Run(async () =>
 });
 
 app.Run();
+
+public partial class Program { }
