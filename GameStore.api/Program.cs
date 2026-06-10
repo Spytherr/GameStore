@@ -166,6 +166,8 @@ app.MapGameOffersEndpoints();
 app.MapOrdersEndpoints();
 app.MapRawgEndpoints();
 
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "healthy" }));
+
 app.MigrateDatabase();
 await app.SeedRolesAsync();
 //await app.ResetDemoDataAsync();
