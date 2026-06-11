@@ -170,7 +170,7 @@ app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
-//await app.ResetDemoDataAsync();
+await app.ResetDemoDataAsync();
 
 
 _ = Task.Run(async () =>

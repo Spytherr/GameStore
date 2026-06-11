@@ -71,9 +71,9 @@ GameStore/
 |---|---|---|---|
 | GET | `/games` | List games (filter, sort, paginate) | No |
 | GET | `/games/{id}` | Get game details with offers | No |
-| POST | `/games` | Add a new game to the catalog | No |
-| PUT | `/games/{id}` | Update game info | No |
-| DELETE | `/games/{id}` | Delete a game (only if no active offers) | No |
+| POST | `/games` | Add a new game to the catalog | Seller |
+| PUT | `/games/{id}` | Update game info | Seller |
+| DELETE | `/games/{id}` | Delete a game (only if no active offers) | Seller |
 
 ### Offers
 | Method | Endpoint | Description | Auth |
@@ -93,16 +93,23 @@ GameStore/
 | GET | `/orders/{id}` | Get order details | Buyer |
 | POST | `/orders/{id}/cancel` | Cancel a paid order | Buyer |
 
-### Other
+### Genres & Platforms
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
 | GET | `/genres` | List all genres | No |
-| GET | `/genres/{id}` | Get genre by ID | No |
 | GET | `/platforms` | List all platforms | No |
-| GET | `/health` | Health check endpoint for UptimeRobot | No |
-| GET | `/rawg/search?query=` | Search games on RAWG | No |
-| GET | `/rawg/{id}` | Get RAWG game details | No |
-| POST | `/rawg/import` | Import a game from RAWG into the catalog | No |
+
+### RAWG Integration
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/rawg/search?query=` | Search games on RAWG | Seller |
+| GET | `/rawg/games/{rawgId}` | Get RAWG game details | Seller |
+| POST | `/rawg/import` | Import a game from RAWG into the catalog | Seller |
+
+### Health
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/health` | Health check (used by UptimeRobot) | No |
 
 ## Key Design Decisions
 
@@ -174,3 +181,7 @@ All **16 tests** should pass. The test suite includes:
 | `global` | 30 requests | 10 seconds | Read endpoints |
 | `auth` | 5 requests | 1 minute | Login / Register |
 | `write` | 10 requests | 1 minute | Create / Update / Delete |
+
+---
+
+> **Note:**The database may be reset periodically.
