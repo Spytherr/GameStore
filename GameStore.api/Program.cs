@@ -166,7 +166,11 @@ app.MapGameOffersEndpoints();
 app.MapOrdersEndpoints();
 app.MapRawgEndpoints();
 
-app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "healthy" }));
+app.MapMethods("/health", new[] { "GET", "HEAD" }, async (GameStoreContext db) =>
+{
+    var canConnect = await db.Database.CanConnectAsync();
+    return Results.Ok(new { status = canConnect ? "healthy" : "unhealthy" });
+});
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();

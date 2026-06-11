@@ -230,6 +230,11 @@ public static class DataExtensions
 
     public static void AddGameStoreDatabase(this WebApplicationBuilder builder, string? connectionString)
     {
-        builder.Services.AddSqlServer<GameStoreContext>(connectionString);
+        builder.Services.AddDbContext<GameStoreContext>(options =>
+            options.UseSqlServer(connectionString, sqlOptions =>
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null)));
     }
 }
