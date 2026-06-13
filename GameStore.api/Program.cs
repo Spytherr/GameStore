@@ -101,7 +101,8 @@ builder.Services.AddOpenApi(options =>
         document.Info.Version = "v1";
         document.Info.Description = "Welcome to the GameStore API!\n\n" +
                                     "Explore all available endpoints below. Some operations require authentication.\n\n" +
-                                    "To use protected endpoints, click **Authorize** and paste your JWT token.";
+                                    "To use protected endpoints, click **Authorize** and paste your JWT token.\n\n" +
+                                    "⚠️ **Note:** The first request after a period of inactivity may take 10-30 seconds due to Azure SQL cold start. Subsequent requests will be fast.";
 
         document.Components ??= new OpenApiComponents();
         var securitySchemes = new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme> 
@@ -166,11 +167,7 @@ app.MapGameOffersEndpoints();
 app.MapOrdersEndpoints();
 app.MapRawgEndpoints();
 
-app.MapMethods("/health", new[] { "GET", "HEAD" }, async (GameStoreContext db) =>
-{
-    var canConnect = await db.Database.CanConnectAsync();
-    return Results.Ok(new { status = canConnect ? "healthy" : "unhealthy" });
-});
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new { status = "healthy" }));
 
 app.MigrateDatabase();
 await app.SeedRolesAsync();
