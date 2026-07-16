@@ -1,4 +1,4 @@
-# 🎮 GameStore API
+#  GameStore API
 
 [![Live Demo on Azure](https://img.shields.io/badge/Live_Demo-Azure-0078D4?style=for-the-badge&logo=microsoft-azure)](https://gamestore-api-spytherr-f3b8hbf2gwcafqbb.swedencentral-01.azurewebsites.net/scalar/v1)
 
@@ -31,32 +31,7 @@ Built with **.NET 10 Minimal API**, deployed on **Azure** as a Docker container.
 | Testing | xUnit, NSubstitute, WebApplicationFactory |
 | Deployment | Docker → Azure Container Apps |
 
-## Project Structure
 
-```
-GameStore/
-├── GameStore.api/
-│   ├── Data/                   # Database context, migrations, seeding
-│   ├── Dtos/                   # Request/response records
-│   │   └── Rawg/               # RAWG API specific DTOs
-│   ├── Endpoints/              # API route definitions
-│   ├── Middleware/              # Validation filter
-│   ├── Models/                 # Entity models
-│   ├── Services/               # Business logic (interfaces + implementations)
-│   ├── Validators/             # FluentValidation rules
-│   ├── Dockerfile
-│   └── Program.cs
-│
-├── GameStore.api.Tests/
-│   ├── GameOffersServiceTests  # Discount validation, authorization
-│   ├── GenresServiceTests      # CRUD with ServiceResult pattern
-│   ├── OrdersServiceTests      # Orders, stock, payments, transactions
-│   ├── GenresEndpointsTests    # Integration: HTTP pipeline
-│   ├── OrdersEndpointsTests    # Integration: auth + endpoints
-│   └── TestAuthHandler         # Fake auth for testing
-│
-└── GameStore.slnx
-```
 
 ## API Endpoints
 
@@ -130,49 +105,6 @@ The payment service is abstracted behind `IPaymentService`. The current implemen
 
 ### Cold Start Optimization
 To prevent the Azure Free/Basic tier from putting the container to sleep after periods of inactivity, the API includes a lightweight `/health` endpoint. This is paired with an external monitoring service (like UptimeRobot) that pings the endpoint every 10-15 minutes. This eliminates the 15-30 second cold start delay that users would otherwise experience when loading the API documentation or making their first request.
-
-## How to Run Locally
-
-### Requirements
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- SQL Server (or LocalDB)
-- RAWG API key (optional) — get one at [rawg.io](https://rawg.io/apidocs)
-
-### Steps
-
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/Spytherr/GameStore.git
-   cd GameStore
-   ```
-
-2. **Set up secrets**
-   ```bash
-   cd GameStore.api
-   dotnet user-secrets set "ConnectionStrings:GameStoreContext" "Server=(localdb)\mssqllocaldb;Database=GameStore;Trusted_Connection=True;TrustServerCertificate=True;"
-   dotnet user-secrets set "Jwt:Key" "YourSuperSecretKeyThatIsAtLeast32Characters!"
-   dotnet user-secrets set "Rawg:ApiKey" "your-rawg-api-key"
-   ```
-
-3. **Run the API**
-   ```bash
-   dotnet run
-   ```
-
-4. **Open the docs**
-
-   Go to `http://localhost:5000/scalar/v1` for the interactive API documentation.
-
-## How to Run Tests
-
-```bash
-dotnet test
-```
-
-All **16 tests** should pass. The test suite includes:
-- **Unit tests** — service logic with in-memory database and mocked payment service (NSubstitute)
-- **Integration tests** — full HTTP pipeline with `WebApplicationFactory` and custom auth handler
-- **Parameterized tests** — boundary value testing for discount validation
 
 ## Rate Limiting
 
