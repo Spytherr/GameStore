@@ -55,10 +55,10 @@ Built with **.NET 10 Minimal API**, deployed on **Azure** as a Docker container.
 |---|---|---|---|
 | GET | `/games/{gameId}/offers` | Get all offers for a game | No |
 | POST | `/games/{gameId}/offers` | Create a new offer | Seller |
-| PUT | `/games/{gameId}/offers/{id}` | Update price and stock | Seller |
-| DELETE | `/games/{gameId}/offers/{id}` | Delete your offer | Seller |
-| POST | `/games/{gameId}/offers/{id}/discount` | Apply a discount (1-90%) | Seller |
-| DELETE | `/games/{gameId}/offers/{id}/discount` | Remove discount | Seller |
+| PUT | `/games/{gameId}/offers/{offerId}` | Update price and stock | Seller |
+| DELETE | `/games/{gameId}/offers/{offerId}` | Delete your offer | Seller |
+| POST | `/games/{gameId}/offers/{offerId}/discount` | Apply a discount (1-90%) | Seller |
+| DELETE | `/games/{gameId}/offers/{offerId}/discount` | Remove discount | Seller |
 
 ### Orders
 | Method | Endpoint | Description | Auth |
@@ -84,7 +84,7 @@ Built with **.NET 10 Minimal API**, deployed on **Azure** as a Docker container.
 ### Health
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/health` | Health check (used by UptimeRobot) | No |
+| GET, HEAD | `/health` | Health check (used by UptimeRobot) | No |
 
 ## Key Design Decisions
 
@@ -108,11 +108,11 @@ To prevent the Azure Free/Basic tier from putting the container to sleep after p
 
 ## Rate Limiting
 
-| Policy | Limit | Window | Used for |
+| Policy | Limit | Window | Applied to |
 |---|---|---|---|
-| `global` | 30 requests | 10 seconds | Read endpoints |
-| `auth` | 5 requests | 1 minute | Login / Register |
-| `write` | 10 requests | 1 minute | Create / Update / Delete |
+| `global` | 30 requests | 10 seconds | `/games` endpoint group |
+| `auth` | 5 requests | 1 minute | `/auth` endpoint group (`Login` / `Register`) |
+| `write` | 10 requests | 1 minute | `/offers`, `/orders`, and `/rawg` endpoint groups |
 
 ---
 
